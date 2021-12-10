@@ -1,0 +1,111 @@
+(ql:quickload :alexandria)
+(ql:quickload :split-sequence)
+(ql:quickload :str)
+(ql:quickload :trivia)
+(ql:quickload :iterate)
+
+(defun aoc-2021-day10-part1 (input)
+  (let ((invalid-chars (make-hash-table)))
+    (loop for line in (str:lines input) do
+      (let ((stack nil))
+	(loop for char across line do
+	  (cond
+	    ((member char '(#\( #\[ #\{ #\<) :test #'char=)
+	     (push char stack))
+	    ((char= char #\))
+	     (if (and (not (null stack))
+		      (char= (car stack) #\())
+		 (setf stack (cdr stack))
+		 (progn
+		   (incf (gethash char invalid-chars 0))
+		   (return))))
+	    ((char= char #\])
+	     (if (and (not (null stack))
+		      (char= (car stack) #\[))
+		 (setf stack (cdr stack))
+		 (progn
+		   (incf (gethash char invalid-chars 0))
+		   (return))))
+	    ((char= char #\})
+	     (if (and (not (null stack))
+		      (char= (car stack) #\{))
+		 (setf stack (cdr stack))
+		 (progn
+		   (incf (gethash char invalid-chars 0))
+		   (return))))
+	    ((char= char #\>)
+	     (if (and (not (null stack))
+		      (char= (car stack) #\<))
+		 (setf stack (cdr stack))
+		 (progn
+		   (incf (gethash char invalid-chars 0))
+		   (return))))
+	    (t (error 'error))))))
+    (+ (* (gethash #\) invalid-chars 0) 3)
+       (* (gethash #\] invalid-chars 0) 57)
+       (* (gethash #\} invalid-chars 0) 1197)
+       (* (gethash #\> invalid-chars 0) 25137))))
+
+(defun invalid-line-p (line)
+  (let ((stack nil))
+    (loop for char across line do
+      (cond
+	((member char '(#\( #\[ #\{ #\<) :test #'char=)
+	 (push char stack))
+	((char= char #\))
+	 (if (and (not (null stack))
+		  (char= (car stack) #\())
+	     (setf stack (cdr stack))
+	     (return-from invalid-line-p t)))
+	((char= char #\])
+	 (if (and (not (null stack))
+		  (char= (car stack) #\[))
+	     (setf stack (cdr stack))
+	     (return-from invalid-line-p t)))
+	((char= char #\})
+	 (if (and (not (null stack))
+		  (char= (car stack) #\{))
+	     (setf stack (cdr stack))
+	     (return-from invalid-line-p t)))
+	((char= char #\>)
+	 (if (and (not (null stack))
+		  (char= (car stack) #\<))
+	     (setf stack (cdr stack))
+	     (return-from invalid-line-p t)))
+	(t (error 'error)))))
+  nil)
+
+(defun aoc-2021-day10-part2 (input)
+  (let ((incomplete-lines
+	  (loop for line in (str:lines input)
+		unless (invalid-line-p line)
+		  collect line)))
+    (let ((scores (make-array (length incomplete-lines))))
+      (loop for line in incomplete-lines
+	    for index from 0 do
+	      (let ((stack nil))
+		(loop for char across line do
+		  (cond
+		    ((member char '(#\( #\[ #\{ #\<) :test #'char=)
+		     (push char stack))
+		    ((member char '(#\) #\] #\} #\>) :test #'char=)
+		     (setf stack (cdr stack)))
+		    (t (error 'error))))
+		(let ((score 0))
+		  (loop for char in stack do
+		    (cond
+		      ((char= char #\()
+		       (setf score (+ (* score 5) 1)))
+		      ((char= char #\[)
+		       (setf score (+ (* score 5) 2)))
+		      ((char= char #\{)
+		       (setf score (+ (* score 5) 3)))
+		      ((char= char #\<)
+		       (setf score (+ (* score 5) 4))))
+		    (setf (aref scores index) score)))))
+      (aref (sort scores #'>) (floor (/ (length scores) 2))))))
+
+(defconstant +input+ (alexandria:read-file-into-string "day10-input"))
+
+(format t "Part 1: ~A~%" (aoc-2021-day10-part1 +input+))
+(format t "Part 2: ~A~%" (aoc-2021-day10-part2 +input+))
