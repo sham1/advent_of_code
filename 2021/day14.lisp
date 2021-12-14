@@ -36,6 +36,18 @@
 				    ((list chars "->" subst)
 				     (cons chars (aref subst 0)))))))))
 
+(defun do-step (input rules)
+  (let ((output (make-hash-table :test #'equal)))
+    (loop for substring being the hash-key using (hash-value count) of input do
+      (aif (assoc substring rules :test #'string-equal)
+	   (let* ((medial-char (cdr it))
+		  (first-half (format nil "~A~A" (aref substring 0) medial-char))
+		  (snd-half (format nil "~A~A" medial-char (aref substring 1))))
+	     (incf (gethash first-half output 0) count)
+	     (incf (gethash snd-half output 0) count))
+	   (incf (gethash substring output 0) count)))
+    output))
+
 (defun aoc-2021-day14 (input iteration-count)
   (let ((table (make-hash-table :test #'equal))
 	(input (car input))
@@ -57,18 +69,6 @@
 	  minimizing occurance-count into least-common
 	  finally (return (- (ceiling most-common 2)
 			     (ceiling least-common 2))))))
-
-(defun do-step (input rules)
-  (let ((output (make-hash-table :test #'equal)))
-    (loop for substring being the hash-key using (hash-value count) of input do
-      (aif (assoc substring rules :test #'string-equal)
-	   (let* ((medial-char (cdr it))
-		  (first-half (format nil "~A~A" (aref substring 0) medial-char))
-		  (snd-half (format nil "~A~A" medial-char (aref substring 1))))
-	     (incf (gethash first-half output 0) count)
-	     (incf (gethash snd-half output 0) count))
-	   (incf (gethash substring output 0) count)))
-    output))
 
 (defun aoc-2021-day14-part1 (input)
   (aoc-2021-day14 input 10))
