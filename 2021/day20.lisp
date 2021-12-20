@@ -30,10 +30,11 @@
 			      (if (char= c #\#) 1 0))))
 	(cons enhance-ret image)))))
 
-(defun get-enhance-index (old-image x y light-edges)
+(defun get-enhance-index (old-image x y light-edges image-enhancing)
   (let ((ret 0)
 	(old-width  (array-dimension old-image 1))
-	(old-height (array-dimension old-image 0)))
+	(old-height (array-dimension old-image 0))
+	(darkness-lights-up (= (aref image-enhancing 0) 1)))
     (loop for y-off from -1 to 1 do
       (loop for x-off from -1 to 1 do
         (let ((x (1- (+ x x-off)))
@@ -43,7 +44,7 @@
 			(if (or (< x 0) (< y 0)
 				(>= x old-width)
 				(>= y old-height))
-			    (if light-edges 1 0)
+			    (if (and darkness-lights-up light-edges) 1 0)
 			    (aref old-image y x)))))))
     ret))
 
@@ -57,7 +58,7 @@
       (loop for x from 0 below new-width do
 	(setf (aref new-image y x)
 	      (aref image-enhancing
-		    (get-enhance-index image x y (= (mod iteration 2) 1))))))
+		    (get-enhance-index image x y (= (mod iteration 2) 1) image-enhancing)))))
     new-image))
 
 (defun print-image (image)
