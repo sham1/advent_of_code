@@ -52,14 +52,6 @@
 		  (setf (aref ret column-id row-id) row)))
     ret))
 
-(defun vector-+ (a b)
-  (let ((ret (make-array 3)))
-    (loop for a across a
-	  for b across b
-	  for i from 0 do
-	    (setf (aref ret i) (+ a b)))
-    ret))
-
 (defun vector-- (a b)
   (let ((ret (make-array 3)))
     (loop for a across a
@@ -204,3 +196,6 @@
 		(manhattan-distance vec-a vec-b)))))
 
 (defconstant +input+ (parse-input (alexandria:read-file-into-string "day19-input")))
+
+(format t "Part 1: ~A~%" (aoc-2021-day19-part1 +input+))
+(format t "Part 2: ~A~%" (aoc-2021-day19-part2 +input+))
